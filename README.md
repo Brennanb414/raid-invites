@@ -1,4 +1,4 @@
-# raid-invites
+# Raid Invites
 Author: Skrimble-Grobbulus
 Version: 0.1
 I built this addon to assist with my own raid invites as raid leader in World of Warcraft.
