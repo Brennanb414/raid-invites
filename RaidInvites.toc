@@ -1,0 +1,10 @@
+## Interface: 11305
+## Title: Raid Invite
+## Notes: 
+## Author: Skrimble-Grobbulus
+## Version: 0.1
+## Version: 0.0.1
+## SavedVariables: RaidInvitesDBTest
+
+embeds.xml
+core.lua
