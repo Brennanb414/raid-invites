@@ -62,15 +62,15 @@ function RaidInvites:OnInitialize()
                 func = "openAddonPanel",
                 guiHidden = true
             },
-            -- test = {
-            --     name = "func for testing",
-            --     desc = "func for testing",
-            --     type = "input",
-            --     set = "testFunc",
-            --     width = "full",
-            --     get = function(info) return db.optionC end
+            test = {
+                name = "func for testing",
+                desc = "func for testing",
+                type = "input",
+                set = "testFunc",
+                width = "full",
+                get = function(info) return db.optionC end
 
-            -- },
+            },
             enable = {
                 name = "Enable",
                 desc = "Enables/Disables the addon | Currently Enabled",
@@ -184,17 +184,12 @@ function RaidInvites:testFunc(info, input)
     self:Print(self.db.profile.optionC)
 end
 
--- function RaidInvites:RefreshConfig(event, db, prof)
---     self:Print(self.db.profile.optionC)
-    
--- 	db = self.db.profile
--- 	--ERA:KwordListToTable()
--- 	--wipe(self.options)
+function RaidInvites:RefreshConfig(event, db, prof)    
+	db = self.db.profile
+	wipe(self.options)
 
--- 	--self:IniOptions()
--- 	--ERA:CreateMonitorUI()
--- 	--ERA:CurrentMonitor()
--- end
+	self:setOptionsFromDB()
+end
 
 function RaidInvites:openAddonPanel()
     LibStub("AceConfigDialog-3.0"):Open("RaidInvites")
