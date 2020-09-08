@@ -15,11 +15,11 @@ function RaidInvites:OnInitialize()
 
     db = self.db.profile
 
-	self.db.RegisterCallback(self, "OnNewProfile", "RefreshConfig")
-	self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
-	self.db.RegisterCallback(self, "OnProfileDeleted", "RefreshConfig")
-	self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
-	self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
+	-- self.db.RegisterCallback(self, "OnNewProfile", "RefreshConfig")
+	-- self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
+	-- self.db.RegisterCallback(self, "OnProfileDeleted", "RefreshConfig")
+	-- self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
+	-- self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
 
     self:Print(db.optionC)
     self.guildMembers = {} --stores all guild members
@@ -62,15 +62,15 @@ function RaidInvites:OnInitialize()
                 func = "openAddonPanel",
                 guiHidden = true
             },
-            test = {
-                name = "func for testing",
-                desc = "func for testing",
-                type = "input",
-                set = "testFunc",
-                width = "full",
-                get = function(info) return db.optionC end
+            -- test = {
+            --     name = "func for testing",
+            --     desc = "func for testing",
+            --     type = "input",
+            --     set = "testFunc",
+            --     width = "full",
+            --     get = function(info) return db.optionC end
 
-            },
+            -- },
             enable = {
                 name = "Enable",
                 desc = "Enables/Disables the addon | Currently Enabled",
@@ -184,17 +184,17 @@ function RaidInvites:testFunc(info, input)
     self:Print(self.db.profile.optionC)
 end
 
-function RaidInvites:RefreshConfig(event, db, prof)
-    self:Print(self.db.profile.optionC)
+-- function RaidInvites:RefreshConfig(event, db, prof)
+--     self:Print(self.db.profile.optionC)
     
-	db = self.db.profile
-	--ERA:KwordListToTable()
-	--wipe(self.options)
+-- 	db = self.db.profile
+-- 	--ERA:KwordListToTable()
+-- 	--wipe(self.options)
 
-	--self:IniOptions()
-	--ERA:CreateMonitorUI()
-	--ERA:CurrentMonitor()
-end
+-- 	--self:IniOptions()
+-- 	--ERA:CreateMonitorUI()
+-- 	--ERA:CurrentMonitor()
+-- end
 
 function RaidInvites:openAddonPanel()
     LibStub("AceConfigDialog-3.0"):Open("RaidInvites")
