@@ -2,8 +2,7 @@
 ## Title: Raid Invite
 ## Notes: 
 ## Author: Skrimble-Grobbulus
-## Version: 0.1
-## Version: 0.0.1
+## Version: 1.0
 ## SavedVariables: RaidInvitesDB
 
 embeds.xml
