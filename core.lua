@@ -27,8 +27,6 @@ function RaidInvites:OnInitialize()
     end
     self:RegisterEvent("GUILD_ROSTER_UPDATE")
 
-    --GuildRoster() -- refresh guild roster once loaded
-    
     self.hourValues = {}
     self.minuteValues = {}
     for i=0,23 do
@@ -89,7 +87,6 @@ function RaidInvites:setOptionsTable()
                         type = "toggle",
                         name = "Minimum Rank Enabled",
                         desc = "Enables/Disables the minimum rank filter",
-                        type = "toggle",
                         set = "toggleMinRank",
                         get = function(info) return self.db.profile.minRankEnabled end,
                         order = 10,
@@ -306,7 +303,7 @@ function RaidInvites:storeGuildMembers()
     local numGuildMembers = GetNumGuildMembers()
     for i=1, numGuildMembers do
         
-        memberName, memberRank, memberRankIndex, memberLvl = GetGuildRosterInfo(i)
+        local memberName, memberRank, memberRankIndex, memberLvl = GetGuildRosterInfo(i)
         newGuildMembers[strsplit("-", memberName)] = {
             ["memberRank"] = memberRank,
             ["memberRankIndex"] = memberRankIndex,
