@@ -27,7 +27,7 @@ function RaidInvites:OnInitialize()
     end
     self:RegisterEvent("GUILD_ROSTER_UPDATE")
 
-    GuildRoster()
+    --GuildRoster() -- refresh guild roster once loaded
     
     self.hourValues = {}
     self.minuteValues = {}
@@ -39,7 +39,7 @@ function RaidInvites:OnInitialize()
     end
 
     
-    self:setOptionsTable()
+    self:setOptionsTable() -- set and register main options table
     self.profilesFrame = AceConfigDialog:AddToBlizOptions("RaidInvites", "RaidInvites", "RaidInvites")
     AceConfigDialog:SetDefaultSize("RaidInvites", 450, 400)
 
@@ -165,7 +165,7 @@ function RaidInvites:setOptionsTable()
 end
 
 function RaidInvites:openAddonPanel()
-    LibStub("AceConfigDialog-3.0"):Open("RaidInvites")
+    AceConfigDialog:Open("RaidInvites")
 end
 
 function RaidInvites:setMinLevel(info, input)
@@ -180,7 +180,6 @@ function RaidInvites:setMinRank(info, input)
     if(not self.db.profile.minRankEnabled) then
         self:toggleMinRank("", true)
     end
-    self:Print(input)
     self.db.profile.minRank = input
 end
 
@@ -297,9 +296,7 @@ end
 
 function RaidInvites:GUILD_ROSTER_UPDATE()
     self:storeGuildMembers()
-    if(GetNumGuildMembers() > 0) then
-        self.guildRankIndexes = self:getRanks();
-        self:UnregisterEvent("GUILD_ROSTER_UPDATE")
+    if(GetNumGuildMembers() > 0) then -- store current members then refresh
         self:RefreshConfig();
     end
 end
