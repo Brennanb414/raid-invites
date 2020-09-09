@@ -1,55 +1,56 @@
 local RaidInvites = LibStub("AceAddon-3.0"):NewAddon("RaidInvites", "AceConsole-3.0", "AceEvent-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 local DEFAULTDB = {
     profile = {
-        optionA = true,
-        optionB = false,
-        optionC = "hello2"
+        enabled = true,
+        minRank = 1,
+        minRankEnabled = true,-- invites only for members above the min rank index
+        minLevelEnabled = true, -- invite only above a minimum level
+        rankFilterResetTime_enabled = true, -- disable rank requirements at a set time
+        minLevel = 55,
+        rankFilterResetTime = {hour=17, min=40},
+        keywordList = {"inv", "invite", "hello", "hi"}
+
     }
 }
 
 function RaidInvites:OnInitialize()
     
     self.db = LibStub("AceDB-3.0"):New("RaidInvitesDB", DEFAULTDB, true)
-
-    db = self.db.profile
-
-	-- self.db.RegisterCallback(self, "OnNewProfile", "RefreshConfig")
-	-- self.db.RegisterCallback(self, "OnProfileChanged", "RefreshConfig")
-	-- self.db.RegisterCallback(self, "OnProfileDeleted", "RefreshConfig")
-	-- self.db.RegisterCallback(self, "OnProfileCopied", "RefreshConfig")
-	-- self.db.RegisterCallback(self, "OnProfileReset", "RefreshConfig")
-
-    self:Print(db.optionC)
     self.guildMembers = {} --stores all guild members
     self.guildRanks = {} --maps guild rank index to guild rank
-    self.enabled = true
-    self.minRank = "" --will be filled in GUILD_ROSTER_UPDATE
-    
-    self:RegisterEvent("CHAT_MSG_WHISPER")
+    if(self.db.profile.enabled) then
+        self:RegisterEvent("CHAT_MSG_WHISPER")
+    end
     self:RegisterEvent("GUILD_ROSTER_UPDATE")
 
     GuildRoster()
-
-
-    self.minRankEnabled = true-- invites only for members above this rank index
-    self.minLevelEnabled = true -- invite only above a minimum level
-    self.rankFilterResetTime_enabled = true -- disable rank requirements at a set time
-
-    self.minLevel = 55
-    self.rankFilterResetTime = {hour=17, min=40} -- stores the time rank filter is stripped
     
-    local hourValues = {}
-    local minuteValues = {}
+    self.hourValues = {}
+    self.minuteValues = {}
     for i=0,23 do
-        hourValues[i] = i
+        self.hourValues[i] = i
     end
     for i=1,59 do
-        minuteValues[i] = i
+        self.minuteValues[i] = i
     end
 
-    self.keyWordList = {"inv", "invite", "hello", "hi"}
+    
+    self:setOptionsTable()
+    self.profilesFrame = AceConfigDialog:AddToBlizOptions("RaidInvites", "RaidInvites", "RaidInvites")
+    AceConfigDialog:SetDefaultSize("RaidInvites", 450, 400)
+
+end
+
+function RaidInvites:RefreshConfig(event, db, prof)
+    self:setOptionsTable()
+    AceConfigRegistry:NotifyChange("RaidInvites")
+end
+
+function RaidInvites:setOptionsTable()
     self.optionsTable = {
         name = "RaidInvites",
         handler = RaidInvites,
@@ -62,22 +63,13 @@ function RaidInvites:OnInitialize()
                 func = "openAddonPanel",
                 guiHidden = true
             },
-            -- test = {
-            --     name = "func for testing",
-            --     desc = "func for testing",
-            --     type = "input",
-            --     set = "testFunc",
-            --     width = "full",
-            --     get = function(info) return db.optionC end
-
-            -- },
             enable = {
                 name = "Enable",
-                desc = "Enables/Disables the addon | Currently Enabled",
+                desc = "Enables/Disables the addon",
                 type = "toggle",
                 set = "toggleEnable",
                 width = "full",
-                get = function(info) return self.enabled end
+                get = function(info) return self.db.profile.enabled end
             },
             keywords = {
                 type = "input",
@@ -85,7 +77,7 @@ function RaidInvites:OnInitialize()
                 desc = "The Message for raid invites",
                 set = "setKeywords",
                 width = 1.5,
-                get = function(info) return strjoin(", ", unpack(self.keyWordList)) end
+                get = function(info) return strjoin(", ", unpack(self.db.profile.keywordList)) end
     
             },
             filterOptions = {
@@ -96,10 +88,10 @@ function RaidInvites:OnInitialize()
                     min_rank_enable = { 
                         type = "toggle",
                         name = "Minimum Rank Enabled",
-                        desc = "Enables/Disables the minimum rank filter | Currently Enabled",
+                        desc = "Enables/Disables the minimum rank filter",
                         type = "toggle",
                         set = "toggleMinRank",
-                        get = function(info) return self.minRankEnabled end,
+                        get = function(info) return self.db.profile.minRankEnabled end,
                         order = 10,
                         width = "full"
                     },
@@ -109,20 +101,20 @@ function RaidInvites:OnInitialize()
                         values = self:getRanks(),
                         desc = "set the minimum guild rank",
                         set  = "setMinRank",
-                        get = function(info) return self.minRank end,
+                        get = function(info) return self.db.profile.minRank end,
                         order = 11
     
                     },
                     min_level_enable = { 
                         type = "toggle",
                         name = "Minimum Level Filter Enabled",
-                        desc = "Enables/Disables the minimum level filter | Currently Disabled",
+                        desc = "Enables/Disables the minimum level filter",
                         set = "toggleMinLevel",
-                        get = function(info) return self.minLevelEnabled end,
+                        get = function(info) return self.db.profile.minLevelEnabled end,
                         order = 20,
                         width = "full"
                     },
-                    set_min_level = { --may need to be gui (check https://www.wowace.com/projects/ace3/pages/api/ace-config-dialog-3-0), this won't work in ace because it takes the 3rd arg no matter what, so /ri setguildrank core raider takes core - will work better in a frame
+                    set_min_level = { 
                         type = "range",
                         name = "Minimum Level",
                         min = 1,
@@ -130,36 +122,36 @@ function RaidInvites:OnInitialize()
                         step = 1,
                         desc = "set the minimum guild rank",
                         set  = "setMinLevel",
-                        get = function(info) return self.minLevel end,
+                        get = function(info) return self.db.profile.minLevel end,
                         order = 21
                     },
                     rank_filter_reset_time_enable = {
                         type = "toggle",
                         name = "Rank Filter Reset Time Enabled",
                         desc = "Time for the rank filter to reset",
-                        set = function(info) self.rankFilterResetTime_enabled = not self.rankFilterResetTime_enabled end,
-                        get = function(info) return self.rankFilterResetTime_enabled end,
+                        set = function(info) self.db.profile.rankFilterResetTime_enabled = not self.db.profile.rankFilterResetTime_enabled end,
+                        get = function(info) return self.db.profile.rankFilterResetTime_enabled end,
                         width = "full",
                         order = 30
                     },
                     set_rank_filter_reset_hour = {
                         type = "select",
                         name = "Hour",
-                        values = hourValues,
+                        values = self.hourValues,
                         desc = "Set the hour for rank filter reset",
-                        set  = function(info, input) self.rankFilterResetTime.hour = input end,
-                        get = function(info) return self.rankFilterResetTime.hour end,
-                        width = 0.3,
+                        set  = function(info, input) self.db.profile.rankFilterResetTime.hour = input end,
+                        get = function(info) return self.db.profile.rankFilterResetTime.hour end,
+                        width = 0.4,
                         order = 31
                     },
                     set_rank_filter_reset_minute = { 
                         type = "select",
                         name = "Min",
-                        values = minuteValues,
+                        values = self.minuteValues,
                         desc = "Set the minute for rank filter reset",
-                        set  = function(info, input) self.rankFilterResetTime.min = input end,
-                        get = function(info) return self.rankFilterResetTime.min end,
-                        width = 0.3,
+                        set  = function(info, input) self.db.profile.rankFilterResetTime.min = input end,
+                        get = function(info) return self.db.profile.rankFilterResetTime.min end,
+                        width = 0.4,
                         order = 32
                     }
                    
@@ -169,50 +161,27 @@ function RaidInvites:OnInitialize()
         
 
     }
-
     AceConfig:RegisterOptionsTable("RaidInvites", self.optionsTable, {"ri"})
-    self.profilesFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("RaidInvites", "RaidInvites", "RaidInvites")
-    LibStub("AceConfigDialog-3.0"):SetDefaultSize("RaidInvites", 450, 400)
-
 end
-
-function RaidInvites:testFunc(info, input)
-    self:Print(input)
-    self:Print(db.optionC)
-    db.optionC = input
-    self:Print(db.optionC)
-    self:Print(self.db.profile.optionC)
-end
-
--- function RaidInvites:RefreshConfig(event, db, prof)
---     self:Print(self.db.profile.optionC)
-    
--- 	db = self.db.profile
--- 	--ERA:KwordListToTable()
--- 	--wipe(self.options)
-
--- 	--self:IniOptions()
--- 	--ERA:CreateMonitorUI()
--- 	--ERA:CurrentMonitor()
--- end
 
 function RaidInvites:openAddonPanel()
     LibStub("AceConfigDialog-3.0"):Open("RaidInvites")
 end
 
 function RaidInvites:setMinLevel(info, input)
-    if(not self.minLevelEnabled) then
+    if(not self.db.profile.minLevelEnabled) then
         self:toggleMinLevel("", true)
     end
-    self.minLevel = input
+    self.db.profile.minLevel = input
 
 end
 
 function RaidInvites:setMinRank(info, input)
-    if(not self.minRankEnabled) then
+    if(not self.db.profile.minRankEnabled) then
         self:toggleMinRank("", true)
     end
-    self.minRank = input
+    self:Print(input)
+    self.db.profile.minRank = input
 end
 
 function RaidInvites:getRanks(info, input)
@@ -225,71 +194,35 @@ function RaidInvites:getRanks(info, input)
 end
 
 function RaidInvites:toggleMinLevel(info, input)
-    self.minLevelEnabled = input
-    self.optionsTable["args"]["filterOptions"]["args"]["min_level_enable"]["desc"] = self:printMinLevelEnableDesc(info)
-    AceConfig:RegisterOptionsTable("RaidInvites", self.optionsTable, {"ri"})
+    self.db.profile.minLevelEnabled = input
 end
-
--- following set of functions set the description in the options tables when options change
-function RaidInvites:printEnableDesc(info)
-    local enableDesc =  "Enables/Disables the addon | Currently "
-    if (self.enabled) then 
-       return enableDesc .. "Enabled" 
-    else 
-        return enableDesc .. "Disabled" 
-    end
-end
-
-function RaidInvites:printMinRankEnableDesc(info)
-    local enableDesc =  "Enables/Disables the minimum rank filter | Currently "
-    if (self.minRankEnabled) then 
-       return enableDesc .. "Enabled" 
-    else 
-        return enableDesc .. "Disabled" 
-    end
-end
-
-function RaidInvites:printMinLevelEnableDesc(info)
-    local enableDesc =  "Enables/Disables the minimum level filter | Currently "
-    if (self.minLevelEnabled) then 
-       return enableDesc .. "Enabled" 
-    else 
-        return enableDesc .. "Disabled" 
-    end
-end
-
--------
 
 function RaidInvites:toggleMinRank(info, input)
-    self.minRankEnabled = input
-    self.optionsTable["args"]["filterOptions"]["args"]["min_rank_enable"]["desc"] = self:printMinRankEnableDesc(info)
-    AceConfig:RegisterOptionsTable("RaidInvites", self.optionsTable, {"ri"})
+    self.db.profile.minRankEnabled = input
 end
 
 function RaidInvites:toggleEnable(info, input)
-    self.enabled = input
+    self.db.profile.enabled = input
     if(input) then
         self:RegisterEvent("CHAT_MSG_WHISPER")
     else
         self:UnregisterEvent("CHAT_MSG_WHISPER")
     end
-    self.optionsTable["args"]["enable"]["desc"] = self:printEnableDesc(info);
-    AceConfig:RegisterOptionsTable("RaidInvites", self.optionsTable, {"ri"})
 end
 
 function RaidInvites:setKeywords(info, input) -- takes keywords as 1 string (delimited by ,)
     if(input) then
-        self.keyWordList = {}
+        self.db.profile.keywordList = {}
         for w in input:gmatch("([^,]+)") do 
             if(w) then
-                table.insert(self.keyWordList, strtrim(w, " "))
+                table.insert(self.db.profile.keywordList, strtrim(w, " "))
             end
         end
     end
 end
 
 function RaidInvites:checkKeyword(input)
-    for k, v in pairs(self.keyWordList) do
+    for k, v in pairs(self.db.profile.keywordList) do
         if(string.lower(input) == string.lower(v)) then
             return true
         end
@@ -307,27 +240,27 @@ function RaidInvites:checkInGuild(memberName)
 end
 
 function RaidInvites:checkRankIndex(memberName)
-    return (tonumber(self.guildMembers[memberName]["memberRankIndex"]) <= tonumber(self.minRank))
+    return (tonumber(self.guildMembers[memberName]["memberRankIndex"]) <= tonumber(self.db.profile.minRank))
 end
 
 function RaidInvites:checkLevel(memberName)
-    return (self.guildMembers[memberName]["memberLvl"] >= self.minLevel)
+    return (self.guildMembers[memberName]["memberLvl"] >= self.db.profile.minLevel)
 end
 
 function RaidInvites:checkEligibility(sender)
     if(not self:checkInGuild(sender)) then
-        self:Print(sender .. "not in guild")
+        self:Print(sender .. " not in guild")
         return false
     end
-    if(self.minRankEnabled) then
+    if(self.db.profile.minRankEnabled) then
         if(not self:checkRankIndex(sender)) then
-            self:Print(sender .. "not right rank index")
+            self:Print(sender .. " not right rank")
             return false
         end
     end
-    if(self.minLevelEnabled) then
+    if(self.db.profile.minLevelEnabled) then
         if(not self:checkLevel(sender)) then
-            self:Print(sender .. "not right level")
+            self:Print(sender .. " not right level")
             return false
         end
     end
@@ -345,9 +278,10 @@ end
 
 function RaidInvites:checkTimeAndUpdate()
     local curTimeHr, curTimeMin = GetGameTime();
-    if((curTimeHr * 60 + curTimeMin) > (tonumber(self.rankFilterResetTime.hour) * 60 + tonumber(self.rankFilterResetTime.min)) and self.minRankEnabled and self.rankFilterResetTime_enabled) then
+    if((curTimeHr * 60 + curTimeMin) > (tonumber(self.db.profile.rankFilterResetTime.hour) * 60 + tonumber(self.db.profile.rankFilterResetTime.min)) and self.db.profile.minRankEnabled and self.db.profile.rankFilterResetTime_enabled) then
         self:toggleMinRank("",false)
         self:Print("Rank filter reset time reached! Disabling minimum rank filter")
+        AceConfigRegistry:NotifyChange("RaidInvites")
     end
 
 end
@@ -364,11 +298,9 @@ end
 function RaidInvites:GUILD_ROSTER_UPDATE()
     self:storeGuildMembers()
     if(GetNumGuildMembers() > 0) then
-        self.minRank = self.guildRanks[self:getRanks()[5]]
+        self.guildRankIndexes = self:getRanks();
         self:UnregisterEvent("GUILD_ROSTER_UPDATE")
-
-        self.optionsTable["args"]["filterOptions"]["args"]["set_min_rank"]["values"] = self:getRanks();
-        AceConfig:RegisterOptionsTable("RaidInvites", self.optionsTable, {"ri"})
+        self:RefreshConfig();
     end
 end
 
