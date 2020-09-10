@@ -10,6 +10,5 @@ This addon assists with raid invites and offers the following functionality:
   * Minimum rank filter
   * Minimum level filter
   * Settable reset time for the minimum rank filter
-  
-Do not install directly from code!\
+
 Download the latest relase zip and unzip it into your interface/addons folder under the wow directory
