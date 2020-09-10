@@ -3,7 +3,7 @@ Author: Skrimble-Grobbulus\
 Version: 1.0
 
 
-I built this addon to assist with my own raid invites as raid leader in World of Warcraft.\
+I built this addon to assist with my own raid invites as raid leader in World of Warcraft.
 
 This addon assists with raid invites and offers the following functionality:
   * Multiple invite keywords
